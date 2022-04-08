@@ -33,5 +33,5 @@ configMap named container-azm-ms-agentconfig is not found, if you created config
 Complete onboard log collection!
 
 Archiving logs...
-log files have been written to azure-monitor-logs.tgz in current folder
+log files have been written to AKSInsights-logs.1649406328.ubuntu1804.tgz in current folder
 ```

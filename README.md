@@ -5,7 +5,15 @@ This tool will collect:
 * windows pod;
 * pod deployment, configMap and process logs.
 
-How to run:
+## Prerequisites
+* kubectl: az aks install-cli
+* tar (installed by default)
+* all nodes should be running on AKS
+* AKS Insights are enabled: https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-onboard
+
+Otherwise, script will report error message and exit.
+
+## How to run
 ```
 wget https://raw.githubusercontent.com/MSNina123456/ContainerInsightsLog/main/AKSInsightsLogCollection.sh && bash ./AKSInsightsLogCollection.sh
 ```

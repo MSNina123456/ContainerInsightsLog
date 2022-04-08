@@ -196,4 +196,4 @@ echo -e "Archiving logs..."
 tar -czf $output_path.tgz $output_path
 rm -rf $output_path
 
-echo "log files have been written to azure-monitor-logs.tgz in current folder"
+echo "log files have been written to ${output_path}.tgz in current folder"

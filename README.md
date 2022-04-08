@@ -3,7 +3,7 @@
 This tool will collect:
 * linux ds and rs pods;
 * windows pod;
-* deployment logs.
+* pod deployment, configMap and process logs.
 
 How to run:
 ```

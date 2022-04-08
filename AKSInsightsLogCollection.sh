@@ -44,6 +44,7 @@ ds_logCollection()
     kubectl describe pod ${ds_pod} --namespace=kube-system > describe_${ds_pod}.txt
     kubectl logs ${ds_pod} --container omsagent --namespace=kube-system > logs_${ds_pod}.txt
     kubectl logs ${ds_pod} --container omsagent-prometheus --namespace=kube-system > logs_${ds_pod}_prom.txt
+    kubectl exec ${ds_pod} -n kube-system -- ps -ef > process_${ds_pod}.txt
 
     cmd=`kubectl exec ${ds_pod} -n kube-system -- ls /var/opt/microsoft 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
@@ -82,6 +83,7 @@ win_logCollection()
     echo -e "Collecting logs from ${ds_win_pod}, windows pod will take few minutes for log collection, please dont exit forcely..." | tee -a Tool.log
     kubectl describe pod ${ds_win_pod} --namespace=kube-system > describe_${ds_win_pod}.txt
     kubectl logs ${ds_win_pod} --container omsagent-win --namespace=kube-system > logs_${ds_win_pod}.txt
+    kubectl exec ${ds_win_pod} -n kube-system -- powershell Get-Process > process_${ds_win_pod}.txt
 
     cmd=`kubectl exec ${ds_win_pod} -n kube-system -- powershell ls /etc 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
@@ -110,6 +112,7 @@ rs_logCollection()
     echo -e "Collecting logs from ${rs_pod}..."
     kubectl describe pod ${rs_pod} --namespace=kube-system > describe_${rs_pod}.txt
     kubectl logs ${rs_pod} --container omsagent --namespace=kube-system > logs_${rs_pod}.txt
+    kubectl exec ${rs_pod} -n kube-system -- ps -ef > process_${rs_pod}.txt
 
     cmd=`kubectl exec ${rs_pod} -n kube-system -- ls /var/opt/microsoft 2>&1`
     if [[ $cmd == *"cannot access"* ]];then

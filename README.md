@@ -22,10 +22,14 @@ Output:
 ```
 Preparing for log collection...
 Prerequistes check is done, all good
+Saving cluster information
+cluster info saved to Tool.log
 Collecting logs from omsagent-5kwzn...
+Defaulted container "omsagent" out of: omsagent, omsagent-prometheus
 Complete log collection from omsagent-5kwzn!
-Collecting logs from omsagent-win-25zdt, windows pod will take few minutes for log collection, please dont exit forcely...
-Complete log collection from omsagent-win-25zdt!
+Collecting logs from omsagent-win-krcpv, windows pod will take several minutes for log collection, please dont exit forcely...
+If your log size are too large, log collection of windows node may fail. You can reduce log size by re-creating windows pod 
+Complete log collection from omsagent-win-krcpv!
 Collecting logs from omsagent-rs-6fc95c45cf-qjsdb...
 Complete log collection from omsagent-rs-6fc95c45cf-qjsdb!
 Collecting onboard logs...
@@ -33,5 +37,5 @@ configMap named container-azm-ms-agentconfig is not found, if you created config
 Complete onboard log collection!
 
 Archiving logs...
-log files have been written to AKSInsights-logs.1649406328.ubuntu1804.tgz in current folder
+log files have been written to AKSInsights-logs.1649655490.ubuntu1804.tgz in current folder
 ```

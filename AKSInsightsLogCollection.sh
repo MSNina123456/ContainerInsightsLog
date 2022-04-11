@@ -1,6 +1,12 @@
 #!/bin/bash
-
-# This script pulls logs from the replicaset agent pod and a random daemonset pod. This script is to make troubleshooting faster
+#
+# Copyright (c) Microsoft Corporation.
+#
+# This script will collect all logs from the replicaset agent pod and a random daemonset pod, also collect onboard logs with processes
+#
+# Note that this script is for Linux only
+#
+# Author Nina Li
 
 Red='\033[0;31m'
 Cyan='\033[0;36m'

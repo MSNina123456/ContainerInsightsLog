@@ -4,8 +4,6 @@
 #
 # This script will collect all logs from the replicaset agent pod and a random daemonset pod, also collect onboard logs with processes
 #
-# Note that this script is for Linux only
-#
 # Author Nina Li
 
 Red='\033[0;31m'
@@ -18,17 +16,23 @@ init()
 
     if ! cmd="$(type -p kubectl)" || [[ -z $cmd ]]; then
         echo -e "${Red}Command kubectl not found, please install it firstly, exit...${NC}"
+        cd ..
+        rm -rf $output_path
         exit
     fi
 
     if ! cmd="$(type -p tar)" || [[ -z $cmd ]]; then
         echo -e "${Red}Command tar not found, please install it firstly, exit...${NC}"
+        cd ..
+        rm -rf $output_path
         exit
     fi
 
     cmd=`kubectl get nodes 2>&1`
     if [[ $cmd == *"refused"* ]];then
         echo -e "${Red}Fail to connect your AKS, please fisrlty connect to cluster by command: az aks get-credentials --resource-group myResourceGroup --name myAKSCluster${NC}"
+        cd ..
+        rm -rf $output_path
         exit
     fi
 
@@ -38,10 +42,26 @@ init()
         if [ `echo $node | tr -s '[:upper:]' '[:lower:]'` != "ready" ]; then
             kubectl get nodes
             echo -e "${Red} One or more AKS node is not ready, please start this node firstly for log collection, exit...${NC}"
+            cd ..
+            rm -rf $output_path
             exit
         fi
     done
     echo -e "Prerequistes check is done, all good" | tee -a Tool.log
+
+    echo -e "Saving cluster information" | tee -a Tool.log
+    
+    cmd=`kubectl cluster-info 2>&1`
+    if [[ $cmd == *"refused"* ]];then
+        echo -e "${Red}Fail to get cluster info, please check your AKS status fistly, exit...${NC}"
+        cd ..
+        rm -rf $output_path
+        exit
+    else
+        echo $cmd >> Tool.log
+        echo -e "cluster info saved to Tool.log" | tee -a Tool.log
+    fi
+
 }
 
 ds_logCollection()
@@ -50,7 +70,7 @@ ds_logCollection()
     kubectl describe pod ${ds_pod} --namespace=kube-system > describe_${ds_pod}.txt
     kubectl logs ${ds_pod} --container omsagent --namespace=kube-system > logs_${ds_pod}.txt
     kubectl logs ${ds_pod} --container omsagent-prometheus --namespace=kube-system > logs_${ds_pod}_prom.txt
-    kubectl exec ${ds_pod} -n kube-system -- ps -ef > process_${ds_pod}.txt
+    kubectl exec ${ds_pod} -n kube-system --request-timeout=10m -- ps -ef > process_${ds_pod}.txt
 
     cmd=`kubectl exec ${ds_pod} -n kube-system -- ls /var/opt/microsoft 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
@@ -86,10 +106,10 @@ ds_logCollection()
 
 win_logCollection()
 {
-    echo -e "Collecting logs from ${ds_win_pod}, windows pod will take few minutes for log collection, please dont exit forcely..." | tee -a Tool.log
+    echo -e "Collecting logs from ${ds_win_pod}, windows pod will take several minutes for log collection, please dont exit forcely..." | tee -a Tool.log
     kubectl describe pod ${ds_win_pod} --namespace=kube-system > describe_${ds_win_pod}.txt
     kubectl logs ${ds_win_pod} --container omsagent-win --namespace=kube-system > logs_${ds_win_pod}.txt
-    kubectl exec ${ds_win_pod} -n kube-system -- powershell Get-Process > process_${ds_win_pod}.txt
+    kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell Get-Process > process_${ds_win_pod}.txt
 
     cmd=`kubectl exec ${ds_win_pod} -n kube-system -- powershell ls /etc 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
@@ -98,16 +118,17 @@ win_logCollection()
         kubectl cp ${ds_win_pod}:/etc/fluent-bit omsagent-win-daemonset-fbit --namespace=kube-system > /dev/null
         kubectl cp ${ds_win_pod}:/etc/telegraf/telegraf.conf omsagent-win-daemonset-fbit/telegraf.conf --namespace=kube-system > /dev/null
 
+        echo -e "${Cyan}If your log size are too large, log collection of windows node may fail. You can reduce log size by re-creating windows pod ${NC}"
         # for some reason copying logs out of /etc/omsagentwindows doesn't work (gives a permission error), but exec then cat does work.
         # kubectl cp ${ds_win_pod}:/etc/omsagentwindows omsagent-win-daemonset --namespace=kube-system
         mkdir -p omsagent-win-daemonset
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/kubernetes_perf_log.txt > omsagent-win-daemonset/kubernetes_perf_log.txt
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/appinsights_error.log > omsagent-win-daemonset/appinsights_error.log
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/filter_cadvisor2mdm.log > omsagent-win-daemonset/filter_cadvisor2mdm.log
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/fluent-bit-out-oms-runtime.log > omsagent-win-daemonset/fluent-bit-out-oms-runtime.log
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/kubernetes_client_log.txt > omsagent-win-daemonset/kubernetes_client_log.txt
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/mdm_metrics_generator.log > omsagent-win-daemonset/mdm_metrics_generator.log
-        kubectl exec ${ds_win_pod} -n kube-system -- powershell cat /etc/omsagentwindows/out_oms.conf > omsagent-win-daemonset/out_oms.conf
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/kubernetes_perf_log.txt > omsagent-win-daemonset/kubernetes_perf_log.txt
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/appinsights_error.log > omsagent-win-daemonset/appinsights_error.log
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/filter_cadvisor2mdm.log > omsagent-win-daemonset/filter_cadvisor2mdm.log
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/fluent-bit-out-oms-runtime.log > omsagent-win-daemonset/fluent-bit-out-oms-runtime.log
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/kubernetes_client_log.txt > omsagent-win-daemonset/kubernetes_client_log.txt
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/mdm_metrics_generator.log > omsagent-win-daemonset/mdm_metrics_generator.log
+        kubectl exec ${ds_win_pod} -n kube-system --request-timeout=10m -- powershell cat /etc/omsagentwindows/out_oms.conf > omsagent-win-daemonset/out_oms.conf
     fi
 
     echo -e "Complete log collection from ${ds_win_pod}!" | tee -a Tool.log
@@ -118,7 +139,7 @@ rs_logCollection()
     echo -e "Collecting logs from ${rs_pod}..."
     kubectl describe pod ${rs_pod} --namespace=kube-system > describe_${rs_pod}.txt
     kubectl logs ${rs_pod} --container omsagent --namespace=kube-system > logs_${rs_pod}.txt
-    kubectl exec ${rs_pod} -n kube-system -- ps -ef > process_${rs_pod}.txt
+    kubectl exec ${rs_pod} -n kube-system --request-timeout=10m -- ps -ef > process_${rs_pod}.txt
 
     cmd=`kubectl exec ${rs_pod} -n kube-system -- ls /var/opt/microsoft 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
@@ -157,7 +178,7 @@ other_logCollection()
 
     export config=$(kubectl get configmaps --namespace=kube-system | grep -E container-azm-ms-agentconfig | head -n 1 | awk '{print $1}')
     if [ -z "$config" ];then
-        echo -e "${Red}configMap named container-azm-ms-agentconfig is not found, if you created configMap for omsagent, please use command to save your custom configMap of omsagent: kubectl get configmaps <configMap name> --namespace=kube-system -o yaml > configMap.yaml${NC}" | tee -a Tool.log
+        echo -e "${Red}configMap named container-azm-ms-agentconfig is not found, if you created configMap for omsagent, please manually save your custom configMap of omsagent by command: kubectl get configmaps <configMap name> --namespace=kube-system -o yaml > configMap.yaml${NC}" | tee -a Tool.log
     else
         kubectl get configmaps $config --namespace=kube-system -o yaml > ${config}.yaml
     fi

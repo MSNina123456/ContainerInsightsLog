@@ -1,9 +1,9 @@
 # ContainerInsightsLog
 
 This tool will collect:
-* linux ds and rs pods;
-* windows pod;
-* pod deployment, configMap and process logs.
+* agent logs from linux ds and rs pods;
+* agent logs from windows pod if enabled;
+* pod deployment, configMap, process logs etc..
 
 ## Prerequisites
 * kubectl: az aks install-cli

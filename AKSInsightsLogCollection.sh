@@ -113,7 +113,7 @@ win_logCollection()
 
     cmd=`kubectl exec ${ds_win_pod} -n kube-system -- powershell ls /etc 2>&1`
     if [[ $cmd == *"cannot access"* ]];then
-        echo -e "${Red}/etc/opt/microsoft/docker-cimprov not exist on ${ds_pod}${NC}" | tee -a Tool.log
+        echo -e "${Red}/etc/ not exist on ${ds_pod}${NC}" | tee -a Tool.log
     else
         kubectl cp ${ds_win_pod}:/etc/fluent-bit omsagent-win-daemonset-fbit --namespace=kube-system > /dev/null
         kubectl cp ${ds_win_pod}:/etc/telegraf/telegraf.conf omsagent-win-daemonset-fbit/telegraf.conf --namespace=kube-system > /dev/null

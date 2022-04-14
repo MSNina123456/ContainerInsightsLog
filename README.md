@@ -1,4 +1,4 @@
-# ContainerInsightsLog
+# Container Insights Log collector
 
 This tool will collect:
 * agent logs from linux ds and rs pods;

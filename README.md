@@ -3,7 +3,7 @@
 This tool will collect:
 * agent logs from linux ds and rs pods;
 * agent logs from windows pod if enabled;
-* pod deployment, configMap, process logs etc..
+* cluster/node info, pod deployment, configMap, process logs etc..
 
 ## Prerequisites
 * kubectl: az aks install-cli
